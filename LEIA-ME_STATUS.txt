@@ -1,0 +1,26 @@
+REMOTE COLONY MANAGER 0.3.1 — CÓDIGO ATUALIZADO
+Minecraft 1.20.1 | Forge 47.2.0 | MineColonies >= 1.1.1317
+
+ALTERAÇÕES DESTA VERSÃO
+-----------------------
+1. Ordens BUILD automáticas: ao abrir/atualizar o painel, prédios colocados e ainda não construídos, sem ordem oficial, passam pelo fluxo nativo do MineColonies para criar uma ordem BUILD. A ordem é liberada em seguida para seleção manual ou distribuição automática na aba Ordens.
+2. Trabalho remoto: as solicitações usam a posição real de uma cabana de construtor compatível como referência, evitando a recusa por distância que ocorria com BlockPos.ZERO. A atribuição posterior usa canBuildIgnoringDistance do MineColonies.
+3. Construir, evoluir, reparar e remover: todas as ações usam as APIs públicas do MineColonies e uma posição de construtor compatível; a reserva temporária da ordem é liberada para que o jogador escolha o trabalhador na aba Ordens.
+4. Validação: o MineColonies continua responsável por validar requisitos, pesquisa, nível, prédio pai e área da colônia.
+
+COMO TESTAR
+-----------
+- Instale a mesma versão do mod no cliente e no servidor.
+- Abra /rcm ou use o item do gerenciador.
+- Prédios sem construção e sem ordem devem gerar ordens BUILD oficiais automaticamente, desde que exista uma cabana de construtor com nível suficiente e os requisitos nativos estejam atendidos.
+- Selecione uma ordem e um construtor livre, depois use Atribuir manual ou Distribuir auto.
+- Teste também evoluir, reparar e remover em um mundo de cópia/backup.
+
+COMPILAÇÃO
+----------
+Com JDK 17 e internet disponível: ./gradlew build --no-daemon
+Saída esperada: build/libs/remotecolonymanager-0.3.1.jar
+
+NOTA DE VERIFICAÇÃO
+-------------------
+A compilação não pôde ser concluída neste ambiente: o Gradle Wrapper tentou baixar Gradle 8.8 de services.gradle.org, mas a resolução DNS/rede falhou (UnknownHostException). Portanto, este ZIP contém o código-fonte atualizado, mas ainda não é um JAR compilado ou testado dentro do Minecraft.

@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: remotecolonymanager
+Specification-Vendor: Vitor
+Specification-Version: 1
+Implementation-Title: GerenciadorRemoto
+Implementation-Version: 0.1.0
+Implementation-Vendor: Vitor
+Implementation-Timestamp: 2026-11-11T01:14:18+0000
+

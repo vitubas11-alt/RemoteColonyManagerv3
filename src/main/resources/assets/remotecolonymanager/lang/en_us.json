@@ -1,0 +1,7 @@
+{
+  "item.remotecolonymanager.colony_manager": "Colony Management Tool",
+  "item.remotecolonymanager.colony_manager.tooltip1": "Right-click to open the colony panel.",
+  "item.remotecolonymanager.colony_manager.tooltip2": "Shortcut: K key or /rcm command",
+  "key.remotecolonymanager.open": "Open Remote Colony Manager",
+  "key.categories.remotecolonymanager": "Remote Colony Manager"
+}

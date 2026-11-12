@@ -1,0 +1,7 @@
+{
+  "item.remotecolonymanager.colony_manager": "Ferramenta de Gerenciamento da Colônia",
+  "item.remotecolonymanager.colony_manager.tooltip1": "Botão direito para abrir o painel da colônia.",
+  "item.remotecolonymanager.colony_manager.tooltip2": "Atalho: tecla K ou comando /rcm",
+  "key.remotecolonymanager.open": "Abrir Remote Colony Manager",
+  "key.categories.remotecolonymanager": "Remote Colony Manager"
+}
