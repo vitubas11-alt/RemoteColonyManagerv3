@@ -1,7 +1,11 @@
-name: Extrair projeto Remote Colony Manager
+name: Publicar Remote Colony Manager
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/extract-zip.yml
 
 permissions:
   contents: write
@@ -15,32 +19,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v3
+          path: projeto
           fetch-depth: 0
 
-      - name: Extrair projeto
+      - name: Extrair arquivos
+        working-directory: projeto
         run: |
           ZIP="RemoteColonyManager_0.3.1_codigo_atualizado.zip"
 
-          if [ ! -f "$ZIP" ]; then
-            echo "ZIP não encontrado!"
+          test -f "$ZIP" || exit 1
+
+          mkdir ../extraido
+          unzip -o "$ZIP" -d ../extraido
+
+          BUILD=$(find ../extraido -type f \
+            \( -name build.gradle -o -name build.gradle.kts \) \
+            -print -quit)
+
+          if [ -z "$BUILD" ]; then
+            echo "Projeto Gradle não encontrado no ZIP"
             exit 1
           fi
 
-          mkdir extracao
-          unzip -o "$ZIP" -d extracao
+          ROOT=$(dirname "$BUILD")
 
-          cp -a extracao/. .
-          rm -rf extracao
+          cp -a "$ROOT"/. .
+          rm -rf ../extraido
           rm "$ZIP"
 
-      - name: Salvar na branch v3
+      - name: Publicar arquivos na v3
+        working-directory: projeto
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add -A
-
-          if ! git diff --cached --quiet; then
-            git commit -m "Atualizar Remote Colony Manager 0.3.1"
-            git push origin HEAD:v3
-          fi
+          git commit -m "Publicar Remote Colony Manager 0.3.1" || exit 0
+          git push origin HEAD:v3
