@@ -1,6 +1,6 @@
 name: Extrair projeto Remote Colony Manager
 
-on:
+"on":
   workflow_dispatch:
 
 permissions:
@@ -11,40 +11,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar repositório
+      - name: Baixar repositório principal
         uses: actions/checkout@v4
         with:
           ref: main
+          path: principal
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Baixar ZIP da branch v3
+      - name: Baixar branch do projeto
         uses: actions/checkout@v4
         with:
           ref: v3
           path: projeto
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
       - name: Extrair projeto
         run: |
           python - <<'PY'
           import pathlib
           import zipfile
-          import shutil
           import tempfile
+          import shutil
 
           repo = pathlib.Path("projeto")
-          zips = list(repo.glob("RemoteColonyManager_0.3.1_codigo_atualizado.zip"))
+          zip_path = repo / "RemoteColonyManager_0.3.1_codigo_atualizado.zip"
 
-          if len(zips) != 1:
+          if not zip_path.is_file():
               raise Exception("ZIP não encontrado na branch v3.")
 
-          with tempfile.TemporaryDirectory() as temp:
-              temp = pathlib.Path(temp)
+          with tempfile.TemporaryDirectory() as temp_dir:
+              temp = pathlib.Path(temp_dir)
 
-              with zipfile.ZipFile(zips[0]) as archive:
+              with zipfile.ZipFile(zip_path) as archive:
                   for item in archive.infolist():
                       path = pathlib.PurePosixPath(item.filename)
 
                       if path.is_absolute() or ".." in path.parts:
-                          raise Exception("Caminho inválido no ZIP.")
+                          raise Exception("Caminho inválido encontrado no ZIP.")
 
                       target = temp.joinpath(*path.parts)
 
@@ -54,26 +62,28 @@ jobs:
                           target.parent.mkdir(parents=True, exist_ok=True)
                           target.write_bytes(archive.read(item))
 
-              projects = list(temp.rglob("build.gradle"))
+              builds = list(temp.rglob("build.gradle")) + list(temp.rglob("build.gradle.kts"))
 
-              if not projects:
-                  raise Exception("build.gradle não encontrado.")
+              if not builds:
+                  raise Exception("Não encontrei build.gradle no ZIP.")
 
               root = min(
-                  (p.parent for p in projects),
-                  key=lambda p: len(p.parts)
+                  (item.parent for item in builds),
+                  key=lambda item: len(item.parts)
               )
 
               for item in root.iterdir():
-                  if item.name not in [".git", ".github"]:
-                      destination = repo / item.name
+                  if item.name in [".git", ".github"]:
+                      continue
 
-                      if item.is_dir():
-                          if destination.exists():
-                              shutil.rmtree(destination)
-                          shutil.copytree(item, destination)
-                      else:
-                          shutil.copy2(item, destination)
+                  destination = repo / item.name
+
+                  if item.is_dir():
+                      if destination.exists():
+                          shutil.rmtree(destination)
+                      shutil.copytree(item, destination)
+                  else:
+                      shutil.copy2(item, destination)
 
           print("Projeto extraído com sucesso!")
           PY
@@ -81,8 +91,15 @@ jobs:
       - name: Salvar projeto na branch v3
         run: |
           cd projeto
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add -A
-          git diff --cached --quiet || git commit -m "Extrair projeto completo"
-          git push origin HEAD:v3
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Extrair projeto Remote Colony Manager"
+            git push origin HEAD:v3
+          else
+            echo "Nenhuma alteração para salvar."
+          fi
