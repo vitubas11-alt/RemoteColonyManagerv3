@@ -1,7 +1,7 @@
 
 name: Extrair projeto ZIP
 
-on:
+"on":
   workflow_dispatch:
 
 permissions:
