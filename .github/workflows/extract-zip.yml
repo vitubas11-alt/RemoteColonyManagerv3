@@ -1,6 +1,6 @@
 name: Extrair projeto Remote Colony Manager
 
-"on":
+on:
   workflow_dispatch:
 
 permissions:
@@ -11,95 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar repositório principal
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: principal
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Baixar branch do projeto
+      - name: Baixar branch v3
         uses: actions/checkout@v4
         with:
           ref: v3
-          path: projeto
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Preparar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
+          fetch-depth: 0
 
       - name: Extrair projeto
         run: |
-          python - <<'PY'
-          import pathlib
-          import zipfile
-          import tempfile
-          import shutil
+          ZIP="RemoteColonyManager_0.3.1_codigo_atualizado.zip"
 
-          repo = pathlib.Path("projeto")
-          zip_path = repo / "RemoteColonyManager_0.3.1_codigo_atualizado.zip"
+          if [ ! -f "$ZIP" ]; then
+            echo "ZIP não encontrado!"
+            exit 1
+          fi
 
-          if not zip_path.is_file():
-              raise Exception("ZIP não encontrado na branch v3.")
+          mkdir extracao
+          unzip -o "$ZIP" -d extracao
 
-          with tempfile.TemporaryDirectory() as temp_dir:
-              temp = pathlib.Path(temp_dir)
+          cp -a extracao/. .
+          rm -rf extracao
+          rm "$ZIP"
 
-              with zipfile.ZipFile(zip_path) as archive:
-                  for item in archive.infolist():
-                      path = pathlib.PurePosixPath(item.filename)
-
-                      if path.is_absolute() or ".." in path.parts:
-                          raise Exception("Caminho inválido encontrado no ZIP.")
-
-                      target = temp.joinpath(*path.parts)
-
-                      if item.is_dir():
-                          target.mkdir(parents=True, exist_ok=True)
-                      else:
-                          target.parent.mkdir(parents=True, exist_ok=True)
-                          target.write_bytes(archive.read(item))
-
-              builds = list(temp.rglob("build.gradle")) + list(temp.rglob("build.gradle.kts"))
-
-              if not builds:
-                  raise Exception("Não encontrei build.gradle no ZIP.")
-
-              root = min(
-                  (item.parent for item in builds),
-                  key=lambda item: len(item.parts)
-              )
-
-              for item in root.iterdir():
-                  if item.name in [".git", ".github"]:
-                      continue
-
-                  destination = repo / item.name
-
-                  if item.is_dir():
-                      if destination.exists():
-                          shutil.rmtree(destination)
-                      shutil.copytree(item, destination)
-                  else:
-                      shutil.copy2(item, destination)
-
-          print("Projeto extraído com sucesso!")
-          PY
-
-      - name: Salvar projeto na branch v3
+      - name: Salvar na branch v3
         run: |
-          cd projeto
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add -A
 
           if ! git diff --cached --quiet; then
-            git commit -m "Extrair projeto Remote Colony Manager"
+            git commit -m "Atualizar Remote Colony Manager 0.3.1"
             git push origin HEAD:v3
-          else
-            echo "Nenhuma alteração para salvar."
           fi
