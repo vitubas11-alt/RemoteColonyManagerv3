@@ -30,7 +30,7 @@ jobs:
           import shutil
 
           repo = pathlib.Path(".").resolve()
-          zips = list(repo.glob("RemoteColonyManager-0_3_0.zip"))
+          zips = list(repo.glob("RemoteColonyManager_0.3.1_codigo_atualizado.zip"))
 
           if len(zips) != 1:
               raise Exception("ZIP do projeto não encontrado na raiz.")
